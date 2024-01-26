@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
     {
         cin >> n >> m >> t;
         a.resize(n, vector<int>(m));
+        b.resize(n, vector<int>(m));
         for (int i = 0; i < n; i++)
         {
             for (int j = 0; j < m; j++)
@@ -55,28 +56,28 @@ int main(int argc, char *argv[])
                 cin >> a[i][j];
             }
         }
+        b = a;
     }
     MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(&m, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(&t, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
     a.resize(n, vector<int>(m));
+    b.resize(n, vector<int>(m));
 
     for (int i = 0; i < n; i++)
     {
-        MPI_Bcast(a[i].data(), n, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(a[i].data(), m, MPI_INT, 0, MPI_COMM_WORLD);
     }
 
     b = a;
 
     for (int iter = 0; iter < t; iter++)
     {
-
         for (int i = tsk_id; i < n; i += num_procs)
         {
             for (int j = 0; j < m; j++)
             {
-                // i  has the row and j has the column
                 int cnt = get_neighbour_live_cnt(a, i, j);
                 if (a[i][j] == 1)
                 {
@@ -101,6 +102,7 @@ int main(int argc, char *argv[])
         {
             MPI_Bcast(b[i].data(), m, MPI_INT, i % num_procs, MPI_COMM_WORLD);
         }
+        a = b;
     }
     // after t iterations, print the state from tsk 0
     if (tsk_id == 0)
